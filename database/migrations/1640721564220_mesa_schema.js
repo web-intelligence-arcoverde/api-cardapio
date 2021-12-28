@@ -8,7 +8,7 @@ class MesaSchema extends Schema {
       table.increments();
 
       table.integer("number").notNullable();
-      table.bigInteger("code").unique().notNullable();
+      table.string("code").unique().notNullable();
       table.boolean("busy").defaultTo(false);
 
       table.timestamps();

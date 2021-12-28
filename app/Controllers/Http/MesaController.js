@@ -2,6 +2,9 @@
 
 const Table = use("App/Models/Mesa");
 
+let charset =
+  "abcdefgh123456789ABCDEDYSADO002908458599441569abdilgopf/*-+@#$%&*";
+
 class MesaController {
   async store({ request, response }) {
     const { number } = request.all();
@@ -15,7 +18,10 @@ class MesaController {
         },
       });
     } else {
-      var code = new Date().getTime();
+      let code = "";
+      for (let i = 0, n = charset.length; i < 6; i++) {
+        code += charset.charAt(Math.floor(Math.random() * n));
+      }
 
       const table = await Table.create({ number, code });
 
@@ -47,7 +53,7 @@ class MesaController {
           },
         });
       }
-      return table;
+      return mesas;
     } catch (error) {
       response.status(400).send({
         error,

@@ -46,8 +46,9 @@ class ClienteController {
 
     findTable.merge({ busy: true });
 
-    const client = await findTable.related("tables").create({
+    const client = await Client.create({
       name,
+      mesas_id: findTable.id,
     });
 
     await client.save();
@@ -57,26 +58,20 @@ class ClienteController {
   }
 
   async show({ params, response }) {
-    try {
-      const { id } = params;
+    const { id } = params;
 
-      const user = await Client.find(id);
+    const user = await Client.find(id);
 
-      if (!user) {
-        return response.status(403).send({
-          error: {
-            message: "Usuário não existe.",
-          },
-        });
-        return;
-      }
-
-      return user;
-    } catch (error) {
-      response.status(401).send({
-        error,
+    if (!user) {
+      return response.status(403).send({
+        error: {
+          message: "Usuário não existe.",
+        },
       });
+      return;
     }
+
+    return user;
   }
 
   async update({ params, request, response }) {
