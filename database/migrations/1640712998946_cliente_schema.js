@@ -8,11 +8,14 @@ class ClienteSchema extends Schema {
     this.create("clientes", (table) => {
       table.increments();
       table
-        .integer("table_id")
+        .integer("mesas_id")
         .unsigned()
+        .notNull()
         .references("id")
-        .inTable("tables")
+        .inTable("mesas")
+        .onUpdate("CASCADE")
         .onDelete("CASCADE");
+
       table.string("name");
 
       table.timestamps();
