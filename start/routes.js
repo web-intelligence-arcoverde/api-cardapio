@@ -2,4 +2,10 @@
 
 const Route = use("Route");
 
-Route.on("/").render("welcome");
+Route.group(() => {
+  Route.resource("client", "ClienteController").apiOnly();
+}).prefix("api/v1");
+
+Route.group(() => {
+  Route.resource("table", "MesaController").apiOnly();
+}).prefix("api/v1");
