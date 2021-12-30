@@ -9,3 +9,7 @@ Route.group(() => {
 Route.group(() => {
   Route.resource("table", "MesaController").apiOnly();
 }).prefix("api/v1");
+
+Route.group(() => {
+  Route.resource("/files", "ArquivoController").apiOnly();
+}).prefix("api/v1");
