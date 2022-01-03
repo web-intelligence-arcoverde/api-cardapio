@@ -12,4 +12,5 @@ Route.group(() => {
 
 Route.group(() => {
   Route.resource("/files", "ArquivoController").apiOnly();
+  Route.get("/find_file_by_name", "ArquivoController.findByName");
 }).prefix("api/v1");
