@@ -7,7 +7,7 @@ class MesaSchema extends Schema {
     this.create("mesas", (table) => {
       table.increments();
 
-      table.integer("number").notNullable();
+      table.integer("number").unique().notNullable();
       table.string("code").unique().notNullable();
       table.boolean("busy").defaultTo(false);
 

@@ -1,6 +1,7 @@
 "use strict";
 
 const Table = use("App/Models/Mesa");
+const Cliente = use("App/Models/Cliente");
 
 let charset =
   "abcdefgh123456789ABCDEDYSADO002908458599441569abdilgopf/*-+@#$%&*";
@@ -13,9 +14,7 @@ class MesaController {
 
     if (table) {
       response.status(400).send({
-        error: {
-          message: "Está mesa já existe no sistema.",
-        },
+        message: "Está mesa já existe no sistema.",
       });
     } else {
       let code = "";
@@ -28,9 +27,7 @@ class MesaController {
       table.save();
 
       response.status(200).send({
-        error: {
-          message: "Mesa cadastrada com sucesso.",
-        },
+        message: "Mesa cadastrada com sucesso.",
       });
     }
   }
@@ -44,16 +41,16 @@ class MesaController {
     try {
       const { id } = params;
 
-      const table = await Table.find(id);
+      const mesa = await Table.find(id);
 
-      if (!table) {
+      if (!mesa) {
         return response.status(403).send({
           error: {
             message: "Mesa não existe.",
           },
         });
       }
-      return mesas;
+      return mesa;
     } catch (error) {
       response.status(400).send({
         error,
@@ -61,8 +58,22 @@ class MesaController {
     }
   }
 
+  async findClientsByTableId({ params }) {
+    try {
+      const { id } = params;
+
+      console.log(id);
+      const clientes = await Cliente.findBy("id_mesas", id);
+
+      console.log(clientes);
+    } catch (error) {}
+  }
+
   async update({ params, request, response }) {
-    const table = await Table.findByOrFail("id", params.id);
+    const { id } = params;
+    const { number, busy } = request.all();
+
+    const table = await Table.find(id);
 
     if (!table) {
       return response.status(403).send({
@@ -72,26 +83,31 @@ class MesaController {
       });
     }
 
-    const data = await request.only(["number", "code", "busy"]);
+    if (number) {
+      const isExistTableNumber = await Table.findBy("number", number);
 
-    table.number = data.number;
-    table.code = data.code;
-    table.busy = data.busy;
+      if (isExistTableNumber) {
+        if (isExistTableNumber.id !== table.id) {
+          return response.status(403).send({
+            message: "Esse numero de mesa ja existe",
+          });
+        }
+      }
+    }
+
+    table.number = number;
+    table.busy = busy;
 
     await table.save();
 
-    return response.json(table);
+    return response.status(200).send({
+      message: "Mesa atualizada",
+    });
   }
 
   async destroy({ params, response }) {
     try {
-      const table = await Table.findByOrFail("id", params.id);
-
-      const user = await Client.findBy("id_table", table.id);
-
-      if (user) {
-        await user.delete();
-      }
+      const table = await Table.find(params.id);
 
       if (!table) {
         return response.status(403).send({
@@ -101,7 +117,17 @@ class MesaController {
         });
       }
 
+      const user = await Cliente.findBy("id_mesas", table.id);
+
+      if (user) {
+        await user.delete();
+      }
+
       await table.delete();
+
+      return response.status(200).send({
+        message: "Mesa excluida",
+      });
     } catch (error) {
       response.status(400).send(error);
     }
