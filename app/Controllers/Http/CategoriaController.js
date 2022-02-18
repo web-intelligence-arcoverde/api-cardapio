@@ -1,93 +1,114 @@
-'use strict'
+"use strict";
 
-/** @typedef {import('@adonisjs/framework/src/Request')} Request */
-/** @typedef {import('@adonisjs/framework/src/Response')} Response */
-/** @typedef {import('@adonisjs/framework/src/View')} View */
+const Categoria = use("App/Models/Categoria");
 
-/**
- * Resourceful controller for interacting with categorias
- */
 class CategoriaController {
-  /**
-   * Show a list of all categorias.
-   * GET categorias
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async index ({ request, response, view }) {
+  async index({ request, response, view }) {
+    try {
+      const categoria = await Categoria.all();
+      return categoria;
+    } catch (error) {}
   }
 
-  /**
-   * Render a form to be used for creating a new categoria.
-   * GET categorias/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {
+  async store({ request, response }) {
+    try {
+      const { name } = request.all();
+
+      if (!name) {
+        return response.status(403).send({
+          message: "Atributo não foi enviado",
+        });
+      }
+
+      const isExistCategory = await Categoria.findBy("name", name);
+
+      if (isExistCategory) {
+        return response.status(403).send({
+          message: "Categoria ja existe",
+        });
+      }
+
+      await Categoria.create({ name });
+
+      return response.status(200).send({
+        message: "Categoria criada",
+      });
+    } catch (error) {}
   }
 
-  /**
-   * Create/save a new categoria.
-   * POST categorias
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store ({ request, response }) {
+  async show({ params, request, response, view }) {
+    try {
+      const { id } = params;
+
+      const category = await Categoria.find(id);
+
+      if (!category) {
+        return response.status(403).send({
+          message: "Categoria nao existe",
+        });
+      }
+
+      return category;
+    } catch (error) {}
   }
 
-  /**
-   * Display a single categoria.
-   * GET categorias/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async show ({ params, request, response, view }) {
+  async update({ params, request, response }) {
+    try {
+      const { id } = params;
+
+      const category = await Categoria.find(id);
+
+      if (!category) {
+        return response.status(403).send({
+          message: "Categoria nao existe",
+        });
+      }
+
+      const { name } = await request.all();
+
+      if (!name) {
+        return response.status(403).send({
+          message: "Atributo nao foi passado",
+        });
+      }
+
+      const findNameCategoryExist = await Categoria.findBy("name", name);
+
+      if (findNameCategoryExist) {
+        return response.status(403).send({
+          message: "Atributo nao foi passado",
+        });
+      }
+
+      category.name = name;
+
+      await category.save();
+
+      return response.status(200).send({
+        message: "Categoria atualizada",
+      });
+    } catch (error) {}
   }
 
-  /**
-   * Render a form to update an existing categoria.
-   * GET categorias/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {
-  }
+  async destroy({ params, request, response }) {
+    try {
+      const { id } = params;
 
-  /**
-   * Update categoria details.
-   * PUT or PATCH categorias/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update ({ params, request, response }) {
-  }
+      const category = await Categoria.find(id);
 
-  /**
-   * Delete a categoria with id.
-   * DELETE categorias/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async destroy ({ params, request, response }) {
+      if (!category) {
+        return response.status(403).send({
+          message: "Categoria nao existe",
+        });
+      }
+
+      await category.delete();
+
+      return response.status(200).send({
+        message: "categoria excluida",
+      });
+    } catch (error) {}
   }
 }
 
-module.exports = CategoriaController
+module.exports = CategoriaController;

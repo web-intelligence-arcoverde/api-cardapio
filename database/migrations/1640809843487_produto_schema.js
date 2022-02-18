@@ -9,7 +9,8 @@ class ProdutoSchema extends Schema {
       table.increments();
 
       table.string("nome");
-      table.string("imagem");
+      table.string("descricao", 254);
+      table.double("preco");
 
       table
         .integer("categorias_id")
@@ -17,6 +18,15 @@ class ProdutoSchema extends Schema {
         .notNull()
         .references("id")
         .inTable("categorias")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
+
+      table
+        .integer("arquivo_id")
+        .unsigned()
+        .notNull()
+        .references("id")
+        .inTable("arquivos")
         .onUpdate("CASCADE")
         .onDelete("CASCADE");
 

@@ -2,6 +2,7 @@
 
 const User = use("App/Models/User");
 const Cargo = use("App/Models/Cargo");
+var parse_email = /^[a-z0-9.]+@[a-z0-9]+\.[a-z]+(\.[a-z]+)?$/i;
 
 class UserController {
   async store({ request, response }) {
@@ -10,6 +11,12 @@ class UserController {
     if (!nome || !id_cargo || !email || !password) {
       return response.status(403).send({
         message: "Alguns atributos nao foram passados",
+      });
+    }
+
+    if (!parse_email.test(email)) {
+      return response.status(403).send({
+        message: "email invalido",
       });
     }
 
