@@ -1,6 +1,5 @@
 'use strict'
 
-const { manage_single_upload } = require('../../Helpers')
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
@@ -10,8 +9,6 @@ const { manage_single_upload } = require('../../Helpers')
 const Image = use('App/Models/Image')
 
 const { image_single_upload, manage_multiple_uploads } = use('App/Helpers')
-
-//const Helpers = use('Helpers')
 
 
 class ImageController {
@@ -51,14 +48,13 @@ class ImageController {
  */
 async store ({ request, response }) {
 
-
     try {
+
        //captura de uma imagem ou mais do request 
        const FileJar = request.file('images', {
-
            types: ['image'],
            size: '2mb' 
-       }) 
+       }); 
 
        // retorno usuario
        let images = []
@@ -85,7 +81,7 @@ async store ({ request, response }) {
         }
         return  response.status(400).send({
              message: 'Não foi possível processar esta imagem no momento!'
-        })
+        });
        }
        // caso seja vários arquivos  - manage_multiple_upload
 
@@ -103,10 +99,15 @@ async store ({ request, response }) {
             image.push(image)
            })
        )
+       return response.status(201).send({ sucesses: images, errors: files.errors})
 
-       return response.status(201).send({ sucesses: images, errors: files.error})
     } catch (error) {
+        return response.status(400).send({
+
+            message: 'não foi possível a sua solicitação'
+        }
         
+        )
     }
 }
 
@@ -119,19 +120,9 @@ async store ({ request, response }) {
  * @param {Response} ctx.response
  * @param {View} ctx.view
  */
-async show ({ params, request, response, view }) {
-}
-
-/**
- * Render a form to update an existing produto.
- * GET produtos/:id/edit
- *
- * @param {object} ctx
- * @param {Request} ctx.request
- * @param {Response} ctx.response
- * @param {View} ctx.view
- */
-async edit ({ params, request, response, view }) {
+async show ({ params: { id }, request, response, view }) {
+    const image = await image.findOrFail(id)
+    return response.send(image)
 }
 
 /**
@@ -142,7 +133,17 @@ async edit ({ params, request, response, view }) {
  * @param {Request} ctx.request
  * @param {Response} ctx.response
  */
-async update ({ params, request, response }) {
+async update ({ params: { id }, request, response }) {
+    const image = await Image.findOrFail(id)
+
+    try {
+        image.merge(request.only(['original_name']));
+        await image.save()
+    } catch (error) {
+        return response.status(400).send({
+            message: 'Não foi possível atualizar essa imagem.'
+        })
+    }
 }
 
 /**
@@ -155,9 +156,6 @@ async update ({ params, request, response }) {
  */
 async destroy ({ params, request, response }) {
 }
-
-
-
 
 }
 
