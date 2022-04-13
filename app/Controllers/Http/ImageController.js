@@ -141,7 +141,7 @@ async update ({ params: { id }, request, response }) {
         await image.save()
     } catch (error) {
         return response.status(400).send({
-            message: 'Não foi possível atualizar essa imagem.'
+            message: 'Não foi possível atualizar essa imagem!, configure e tente novamente.'
         })
     }
 }
