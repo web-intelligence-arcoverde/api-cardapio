@@ -1,11 +1,15 @@
 'use strict'
 
+const { manage_single_upload } = require('../../Helpers')
+
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
 
 const Image = use('App/Models/Image')
+
+const { image_single_upload } = use('App/Helpers')
 
 //const Helpers = use('Helpers')
 
@@ -60,6 +64,22 @@ async store ({ request, response }) {
        let images = []
        // caso seja um único arquivo - manage_single_upload
        // caso seja vários arquivos  - manage_multiple_upload
+       if(!FileJar.files){
+           const file = await  manage_single_upload(FileJar)
+           if(file.moved()){
+
+
+            const image = await Image.create({
+
+                path : file.fileName
+                size : file.size, 
+                original_name: file.clientName, 
+                extension: file.subtype 
+            })
+            images.push(image)
+            return response.status(201).send({sucesses: images, errors: {} })
+           }
+       }
     } catch (error) {
         
     }
