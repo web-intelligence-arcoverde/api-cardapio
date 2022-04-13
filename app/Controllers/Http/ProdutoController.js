@@ -18,6 +18,7 @@ class ProdutoController {
    * @param {View} ctx.view
    */
   async index ({ request, response, view }) {
+    
   }
 
   /**
