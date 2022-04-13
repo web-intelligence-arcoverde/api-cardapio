@@ -156,7 +156,7 @@ async update ({ params: { id }, request, response }) {
  * @param {Request} ctx.request
  * @param {Response} ctx.response
  */
-async destroy ({ params, request, response }) {
+async destroy ({ params: { id }, request, response }) {
     const image = await Image.findOrFail(id)
     try {
         let filepatch = Helpers.publicPatch(`uploads/${image.patch}`)
@@ -169,7 +169,6 @@ async destroy ({ params, request, response }) {
         return response.status(400).send({
             message: 'Não foi possível deletar a imagem do momento.'
         });
-        
     }
 }
 
