@@ -9,7 +9,7 @@ const { manage_single_upload } = require('../../Helpers')
 
 const Image = use('App/Models/Image')
 
-const { image_single_upload } = use('App/Helpers')
+const { image_single_upload, manage_multiple_uploads } = use('App/Helpers')
 
 //const Helpers = use('Helpers')
 
@@ -64,21 +64,27 @@ async store ({ request, response }) {
        let images = []
        // caso seja um único arquivo - manage_single_upload
        // caso seja vários arquivos  - manage_multiple_upload
+
        if(!FileJar.files){
-           const file = await  manage_single_upload(FileJar)
+
+        const file = await manage_multiple_uploads(FileJar)
+
            if(file.moved()){
-
-
+            //single upload
             const image = await Image.create({
 
-                path : file.fileName
+                path : file.fileName,
                 size : file.size, 
                 original_name: file.clientName, 
                 extension: file.subtype 
             })
             images.push(image)
-            return response.status(201).send({sucesses: images, errors: {} })
-           }
+            return response.status(201).send({sucesses: images, errors: {} }) */
+           
+        }
+        return  response.status(400).send({
+             message: 'Não foi possível processar esta imagem no momento!'
+        })
        }
     } catch (error) {
         
