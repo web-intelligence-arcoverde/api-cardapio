@@ -8,6 +8,8 @@
 
 const Image = use('App/Models/Image')
 
+import { unlink } from 'fs';
+
 const { image_single_upload, manage_multiple_uploads } = use('App/Helpers')
 
 
@@ -155,6 +157,20 @@ async update ({ params: { id }, request, response }) {
  * @param {Response} ctx.response
  */
 async destroy ({ params, request, response }) {
+    const image = await Image.findOrFail(id)
+    try {
+        let filepatch = Helpers.publicPatch(`uploads/${image.patch}`)
+        await fs.unlink(filepatch, err =>{ 
+            if(!err)
+            await image.delete()
+        })
+        return response.status(204).send()
+    } catch (error) {
+        return response.status(400).send({
+            message: 'Não foi possível deletar a imagem do momento.'
+        });
+        
+    }
 }
 
 }
