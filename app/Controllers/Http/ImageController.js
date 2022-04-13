@@ -76,15 +76,16 @@ async store ({ request, response }) {
                 size : file.size, 
                 original_name: file.clientName, 
                 extension: file.subtype 
-            })
+            });
             images.push(image)
-            return response.status(201).send({sucesses: images, errors: {} }) */
+            return response.status(201).send({sucesses: images, errors: {} }) 
            
         }
         return  response.status(400).send({
              message: 'Não foi possível processar esta imagem no momento!'
         });
        }
+
        // caso seja vários arquivos  - manage_multiple_upload
 
        let files = await manage_multiple_uploads(FileJar)
@@ -108,7 +109,7 @@ async store ({ request, response }) {
 
             message: 'não foi possível a sua solicitação'
         }
-        
+
         )
     }
 }

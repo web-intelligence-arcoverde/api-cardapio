@@ -5,3 +5,4 @@ require("./user.routes");
 require("./mesa.routes");
 require("./cliente.routes");
 require("./arquivo.routes");
+require("./imageUploud.routes");
