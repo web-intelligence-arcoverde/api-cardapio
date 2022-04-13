@@ -62,12 +62,13 @@ async store ({ request, response }) {
 
        // retorno usuario
        let images = []
-       // caso seja um único arquivo - manage_single_upload
-       // caso seja vários arquivos  - manage_multiple_upload
 
+
+       // caso seja um único arquivo - manage_single_upload
+       
        if(!FileJar.files){
 
-        const file = await manage_multiple_uploads(FileJar)
+        const file = await image_single_upload(FileJar)
 
            if(file.moved()){
             //single upload
@@ -86,6 +87,24 @@ async store ({ request, response }) {
              message: 'Não foi possível processar esta imagem no momento!'
         })
        }
+       // caso seja vários arquivos  - manage_multiple_upload
+
+       let files = await manage_multiple_uploads(FileJar)
+
+       await Promise.all(
+           files.sucesses.map(async file => {
+
+            const image = await Image.create({
+                path: file.fileName,
+                size: file.size, 
+               original_name: file.clientName,
+               extension: file.subtype
+            })
+            image.push(image)
+           })
+       )
+
+       return response.status(201).send({ sucesses: images, errors: files.error})
     } catch (error) {
         
     }
