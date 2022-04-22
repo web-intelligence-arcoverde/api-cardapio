@@ -1,12 +1,17 @@
 "use strict";
 
 class AuthController {
-  async auth({ request, auth }) {
+  async login({ auth, request, response }) {
     const { email, password } = request.all();
+    await auth.attempt(email, password);
 
-    const token = await auth.attempt(email, password);
+    return response.redirect("/");
+  }
 
-    return token;
+  async logout({ auth, response }) {
+    await auth.logout();
+
+    return response.redirect("/login");
   }
 }
 
