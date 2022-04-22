@@ -3,15 +3,15 @@
 class AuthController {
   async login({ auth, request, response }) {
     const { email, password } = request.all();
-    await auth.attempt(email, password);
 
-    return response.redirect("/");
+    const token = await auth.attempt(email, password);
+
+    return token;
   }
 
-  async logout({ auth, response }) {
+  async logout({ auth, request, response }) {
     await auth.logout();
-
-    return response.redirect("/login");
+    return response.send("deslogado com sucesso");
   }
 }
 
