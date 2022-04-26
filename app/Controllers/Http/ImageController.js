@@ -101,7 +101,6 @@ class PictureController {
    */
   async upload({ request }) {
     const folder = 'uploads';
-
     request.multipart.file('picture', {}, async file => {
       await Drive.put(`${folder}/${file.clientName}`, file.stream, {
         ACL: 'public-read',
