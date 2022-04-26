@@ -1,178 +1,118 @@
 'use strict'
 
+const Drive = use('Drive');
+const Helpers = use('Helpers');
 
-/** @typedef {import('@adonisjs/framework/src/Request')} Request */
-/** @typedef {import('@adonisjs/framework/src/Response')} Response */
-/** @typedef {import('@adonisjs/framework/src/View')} View */
+const fs = require('fs');
+const mkdirp = require('mkdirp');
+const { Readable } = require('stream');
 
-
-const Image = use('App/Models/Image')
-
-import { unlink } from 'fs';
-
-const { image_single_upload, manage_multiple_uploads } = use('App/Helpers')
-
-
-class ImageController {
-     /**
-   * Show a list of all produtos.
-   * GET produtos
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
+class PictureController {
+  /**
+   * Save a Readable stream to local disk.
+   * @private
+   * @param {Readable} file - Readable stream that will be saved.
+   * @param {string} pathname - Pathname in the disk.
+   * @return {Promise} If successful returns a WritableStream.
    */
-  async index ({ request, response, pagination }) {
+  _saveStreamToFile(file, pathname) {
+    return new Promise((resolve, reject) => {
+      const writer = fs.createWriteStream(pathname);
 
-    const images = await Image.query().orderBy('id', 'DESC')
-    .paginate(pagination.page, pagination.limit)
-    return response.send(images)
-}
+      file.pipe(writer);
 
-/**
- * Render a form to be used for creating a new produto.
- * GET produtos/create
- *
- * @param {object} ctx
- * @param {Request} ctx.request
- * @param {Response} ctx.response
- * @param {View} ctx.view
- */
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+  }
 
-/**
- * Create/save a new produto.
- * POST produtos
- *
- * @param {object} ctx
- * @param {Request} ctx.request
- * @param {Response} ctx.response
- */
-async store ({ request, response }) {
+  /**
+   * Return if a file exists in bucket and his formatted url.
+   * @public
+   * @param {string} params.filename - Filename to be queried.
+   * @route {GET} /picture/:filename
+   * @return {{ exists: boolean, fileUrl: string }} Status object
+   */
+  async show({ params }) {
+    const folder = 'uploads';
+    const { filename } = params;
 
-    try {
+    const [exists, fileUrl] = await Promise.all([
+      Drive.exists(`${folder}/${filename}`),
+      Drive.getUrl(`${folder}/${filename}`),
+    ]);
 
-       //captura de uma imagem ou mais do request 
-       const FileJar = request.file('images', {
-           types: ['image'],
-           size: '2mb' 
-       }); 
+    return { exists, fileUrl };
+  }
 
-       // retorno usuario
-       let images = []
+  /**
+   * Get file from bucket and save to local disk.
+   * If file doesn't exist return error message.
+   * @public
+   * @param {string} params.filename - Filename to be queried.
+   * @param {function} response.send - Sets the response body for the HTTP request
+   * @param {function} response.download - Stream a file to the client as HTTP response.
+   * @route {GET} /picture/:filename/download
+   * @return {ResponseStream} Pipe stream to the response
+   */
+  async download({ params, response }) {
+    const folder = 'uploads';
+    const { filename } = params;
+    const path = Helpers.tmpPath(`${folder}/`);
 
+    const [exists, s3Object] = await Promise.all([
+      Drive.exists(`${folder}/${filename}`),
+      Drive.getObject(`${folder}/${filename}`),
+    ]);
 
-       // caso seja um único arquivo - manage_single_upload
-       
-       if(!FileJar.files){
-
-        const file = await image_single_upload(FileJar)
-
-           if(file.moved()){
-            //single upload
-            const image = await Image.create({
-
-                path : file.fileName,
-                size : file.size, 
-                original_name: file.clientName, 
-                extension: file.subtype 
-            });
-            images.push(image)
-            return response.status(201).send({sucesses: images, errors: {} }) 
-           
-        }
-        return  response.status(400).send({
-             message: 'Não foi possível processar esta imagem no momento!'
-        });
-       }
-
-       // caso seja vários arquivos  - manage_multiple_upload
-
-       let files = await manage_multiple_uploads(FileJar)
-
-       await Promise.all(
-           files.sucesses.map(async file => {
-
-            const image = await Image.create({
-                path: file.fileName,
-                size: file.size, 
-               original_name: file.clientName,
-               extension: file.subtype
-            })
-            image.push(image)
-           })
-       )
-       return response.status(201).send({ sucesses: images, errors: files.errors})
-
-    } catch (error) {
-        return response.status(400).send({
-
-            message: 'não foi possível a sua solicitação'
-        }
-
-        )
+    if (!exists) {
+      return response.status(404).send({
+        error: {
+          message: 'File not found.',
+        },
+      });
     }
-}
 
-/**
- * Display a single produto.
- * GET produtos/:id
- *
- * @param {object} ctx
- * @param {Request} ctx.request
- * @param {Response} ctx.response
- * @param {View} ctx.view
- */
-async show ({ params: { id }, request, response, view }) {
-    const image = await image.findOrFail(id)
-    return response.send(image)
-}
-
-/**
- * Update produto details.
- * PUT or PATCH produtos/:id
- *
- * @param {object} ctx
- * @param {Request} ctx.request
- * @param {Response} ctx.response
- */
-async update ({ params: { id }, request, response }) {
-    const image = await Image.findOrFail(id)
-
-    try {
-        image.merge(request.only(['original_name']));
-        await image.save()
-    } catch (error) {
-        return response.status(400).send({
-            message: 'Não foi possível atualizar essa imagem!, configure e tente novamente.'
-        })
+    if (!fs.existsSync(path)) {
+      mkdirp(path);
     }
-}
 
-/**
- * Delete a produto with id.
- * DELETE produtos/:id
- *
- * @param {object} ctx
- * @param {Request} ctx.request
- * @param {Response} ctx.response
- */
-async destroy ({ params: { id }, request, response }) {
-    const image = await Image.findOrFail(id)
-    try {
-        let filepatch = Helpers.publicPatch(`uploads/${image.patch}`)
-        await fs.unlink(filepatch, err =>{ 
-            if(!err)
-            await image.delete()
-        })
-        return response.status(204).send()
-    } catch (error) {
-        return response.status(400).send({
-            message: 'Não foi possível deletar a imagem do momento.'
-        });
-    }
-}
+    const pathname = `${path}/${filename}`;
 
+    const readableInstanceStream = new Readable({
+      read() {
+        this.push(s3Object.Body);
+        this.push(null);
+      },
+    });
+
+    await this._saveStreamToFile(readableInstanceStream, pathname);
+
+    return response.download(pathname);
+  }
+
+  /**
+   * Upload file to bucket.
+   * @public
+   * @param {function} request.multipart.file - Add a listener to file.
+   * @param {function} request.multipart.process - Process files by going over each part of the stream.
+   * @route {POST} /picture
+   * @return {string} Upload successful message.
+   */
+  async upload({ request }) {
+    const folder = 'uploads';
+
+    request.multipart.file('picture', {}, async file => {
+      await Drive.put(`${folder}/${file.clientName}`, file.stream, {
+        ACL: 'public-read',
+        ContentType: `${file.type}/${file.subtype}`,
+      });
+    });
+
+    await request.multipart.process();
+
+    return 'Arquivo salvo na s3.';
+  }
 }
 
 module.exports = ImageController
