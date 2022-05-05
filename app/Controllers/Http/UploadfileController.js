@@ -1,7 +1,8 @@
 'use strict'
-
-class UploadfileController {
-    /**
+const Drive = use('Drive')
+class UploadfileController { 
+  
+  /**
    * Save a Readable stream to local disk.
    * @private
    * @param {Readable} file - Readable stream that will be saved.
