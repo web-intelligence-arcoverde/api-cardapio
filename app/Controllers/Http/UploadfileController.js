@@ -1,14 +1,7 @@
 'use strict'
 
-const Drive = use('Drive');
-const Helpers = use('Helpers');
-
-const fs = require('fs');
-const mkdirp = require('mkdirp');
-const { Readable } = require('stream');
-
-class ImageController {
-  /**
+class UploadfileController {
+    /**
    * Save a Readable stream to local disk.
    * @private
    * @param {Readable} file - Readable stream that will be saved.
@@ -99,7 +92,7 @@ class ImageController {
    * @route {POST} /picture
    * @return {string} Upload successful message.
    */
-  async upload({ request }) {
+  async store({ request }) {
     const folder = 'uploads';
     request.multipart.file('picture', {}, async file => {
       await Drive.put(`${folder}/${file.clientName}`, file.stream, {
@@ -114,4 +107,4 @@ class ImageController {
   }
 }
 
-module.exports = ImageController
+module.exports = UploadfileController
