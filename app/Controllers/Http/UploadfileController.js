@@ -1,5 +1,5 @@
 'use strict'
-const Drive = use('Drive')
+const Drive = use('Drive');
 class UploadfileController { 
   
   /**
